@@ -1,11 +1,15 @@
 const express = require('express')
 const cookieParser = require('cookie-parser');
+var cors = require('cors');
 const app = express()
 const port = 3000
 const connection = require('./database')
 
 const debug = true
 const authException = ['/api/leaderboard']
+
+// Hits CORS on the head with a blunt object to make it work
+app.use(cors());
 
 // Cookie parsing middleware
 app.use(cookieParser());

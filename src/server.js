@@ -5,6 +5,7 @@ const port = 3000
 const connection = require('./database')
 
 const debug = true
+const authException = ['/api/leaderboard']
 
 // Cookie parsing middleware
 app.use(cookieParser());
@@ -30,7 +31,10 @@ app.use((req, res, next) => {
 // This middleware checks if the request contains a 'team' cookie.
 // The cookie contains the team name.
 app.use((req, res, next) => {
-    console.log(req.cookies)
+    if (authException.includes(req.url)) {
+        next()
+    }
+
     if (req.cookies.team) {
         next()
     } else {

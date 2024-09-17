@@ -76,6 +76,37 @@ app.get('/api/questions/:id', (req, res) => {
     })
 });
 
+app.get('/api/leaderboard', (req, res) => {
+    res.json({
+        leaderboard: [
+            {
+                team: 'Team 1',
+                points: 10
+            },
+            {
+                team: 'Team 2',
+                points: 5
+            },
+            {
+                team: 'Team 3',
+                points: 2
+            },
+            {
+                team: 'Team 4',
+                points: 2
+            },
+            {
+                team: 'Team 5',
+                points: 20
+            },
+            {
+                team: 'Team 6',
+                points: 1
+            }
+        ]
+    })
+});
+
 app.post('/')
 
 app.listen(port, () => {

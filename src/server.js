@@ -6,7 +6,7 @@ const port = 3000
 const connection = require('./database')
 
 const debug = true
-const authException = ['/api/leaderboard']
+const authException = ['/api/leaderboard', '/api/questions', '/api/options']
 
 // Hits CORS on the head with a blunt object to make it work
 app.use(cors());
@@ -37,6 +37,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     if (authException.includes(req.url)) {
         next()
+        return
     }
 
     if (req.cookies.team) {
@@ -62,24 +63,18 @@ app.get('/api/questions', (req, res) => {
     })    
 });
 
-app.get('/api/questions/:id', (req, res) => {
-    const id = req.params.id
+app.post('/api/options', (req, res) => {
+    const body = req.body
+    const questionId = body.questionId
 
-    question = connection.query('SELECT * FROM questions WHERE id = ?', [id], (error, results) => {
+    options = connection.query('SELECT * FROM answers WHERE related_question = ?', [questionId], (error, results) => {
         if (error) {
             console.error(error)
             return
         }
 
-        if (results.length === 0) {
-            res.status(404).json({
-                error: `Nyt meni jotain pieleen. Kysymystä numero '${id}' ei löytynyt.`
-            })
-            return
-        }
-
         res.json({
-            question: results
+            options: results
         })
     })
 });

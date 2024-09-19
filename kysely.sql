@@ -123,6 +123,12 @@ ALTER TABLE `questions`
 ALTER TABLE `scores`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
+
+-- juhanias 19.9
+-- add image_src to questions
+ALTER TABLE `questions`
+  ADD `image_src` varchar(255) NOT NULL;
+  
 --
 -- Rajoitteet vedostauluille
 --

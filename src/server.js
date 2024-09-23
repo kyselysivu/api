@@ -6,10 +6,13 @@ const port = 3000
 const connection = require('./database')
 
 const debug = true
-const authException = ['/api/leaderboard', '/api/questions', '/api/options']
+const authException = ['/api/start', '/api/questions', '/api/options', '/api/leaderboard']
 
 // Hits CORS on the head with a blunt object to make it work
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}))
 
 // Cookie parsing middleware
 app.use(cookieParser());
@@ -35,7 +38,11 @@ app.use((req, res, next) => {
 // This middleware checks if the request contains a 'team' cookie.
 // The cookie contains the team name.
 app.use((req, res, next) => {
-    if (authException.includes(req.url)) {
+    if (authException.find((element) => {
+        if (req.url.includes(element)) {
+            return true
+        }
+    })) {
         next()
         return
     }
@@ -49,69 +56,134 @@ app.use((req, res, next) => {
     }
 })
 
-
-app.get('/api/questions', (req, res) => {
-    questions = connection.query('SELECT * FROM questions', (error, results) => {
-        if (error) {
-            console.error(error)
-            return
-        }
-
-        res.json({
-            questions: results
-        })
-    })    
-});
-
-app.post('/api/options', (req, res) => {
+app.post('/api/start', async (req, res) => {
     const body = req.body
-    const questionId = body.questionId
 
-    options = connection.query('SELECT * FROM answers WHERE related_question = ?', [questionId], (error, results) => {
+    // Apply a set cookie header to the response
+    connection.query('SELECT id FROM questions', (error, results) => {
         if (error) {
             console.error(error)
             return
         }
 
+        // add a random digit identifier to the team name
+        res.cookie('team', body.team_name + Math.floor(Math.random() * 10000), {
+            path: '/',
+            sameSite: 'None',  // Allows cross-origin cookies
+            secure: false,     // Should be true in production with HTTPS
+            httpOnly: false    // Allows access from JavaScript
+        });
+
         res.json({
-            options: results
+            "questions": results.map((question) => {
+                return question.id
+            }),
+            "time_limit": 60 * 12
         })
     })
-});
+})
 
-app.get('/api/leaderboard', (req, res) => {
-    res.json({
-        leaderboard: [
-            {
-                team: 'Team 1',
-                points: 10
-            },
-            {
-                team: 'Team 2',
-                points: 5
-            },
-            {
-                team: 'Team 3',
-                points: 2
-            },
-            {
-                team: 'Team 4',
-                points: 2
-            },
-            {
-                team: 'Team 5',
-                points: 20
-            },
-            {
-                team: 'Team 6',
-                points: 1
+app.post('/api/answer', async (req, res) => {
+    const body = req.body
+
+    // Verify questionId
+    if (isNaN(body.question_id)) {
+        res.status(400).json({
+            error: 'Invalid question ID'
+        })
+        return
+    }
+
+    // Verify request contains array of answers
+    if (!Array.isArray(body.answers)) {
+        res.status(400).json({
+            error: 'Invalid answer array'
+        })
+        return
+    }
+
+    connection.query('SELECT * FROM answers WHERE related_question = ?', [body.question_id], (error, results) => {
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        console.log(results)
+
+        res.json({
+            correct: results.filter((answer) => {
+                return answer.is_correct === 1
+            }).map((answer) => {
+                return answer.id
+            }),
+            incorrect: results.filter((answer) => {
+                return answer.is_correct === 0
+            }).map((answer) => {
+                return answer.id
+            }),
+            time_bonus: 0
+        })
+    })
+})
+app.get('/api/questions/:questionId', async (req, res) => {
+    const questionId = req.params.questionId
+
+    // Verify questionId
+    if (isNaN(questionId)) {
+        res.status(400).json({
+            error: 'Invalid question ID'
+        })
+        return
+    }
+
+    connection.query('SELECT * FROM questions WHERE id = ?', [questionId], (error, results) => {
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        if (results.length === 0) {
+            res.status(404).json({
+                error: 'Question not found'
+            })
+            return
+        }
+
+        let firstQuestion = results[0]
+
+        let answers = connection.query('SELECT * FROM answers WHERE related_question = ?', [questionId], (error, results) => {
+            if (error) {
+                console.error(error)
+                return
             }
-        ]
+
+            firstQuestion.answers = results.map((answer) => {
+                return {
+                    id: answer.id,
+                    answer: answer.answer_title,
+                }
+            })
+
+            res.json(firstQuestion)
+        })
+    })
+})
+
+app.get('/api/leaderboard', async (req, res) => {
+    connection.query('SELECT group_name, score, time FROM scores ORDER BY score DESC', (error, results) => {
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        res.json({
+            leaderboard: results
+        })
     })
 });
 
 app.post('/')
 
 app.listen(port, () => {
-  console.log(`[Startup] Kyselysivu API is running on port ${port}`)
+    console.log(`[Startup] Kyselysivu API is running on port ${port}`)
 })

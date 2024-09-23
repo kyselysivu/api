@@ -34,17 +34,6 @@ CREATE TABLE `answers` (
   `is_correct` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Vedos taulusta `answers`
---
-
-INSERT INTO `answers` (`id`, `related_question`, `answer_title`, `is_correct`) VALUES
-(1, 1, '13', 0),
-(2, 1, '14', 0),
-(3, 1, '16', 0),
-(4, 1, '17', 0),
-(5, 2, 'gstrhsyjdesar', 1),
-(6, 2, 'bstjsths5', 0);
 
 -- --------------------------------------------------------
 
@@ -56,14 +45,6 @@ CREATE TABLE `questions` (
   `id` int(11) NOT NULL,
   `question_title` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Vedos taulusta `questions`
---
-
-INSERT INTO `questions` (`id`, `question_title`) VALUES
-(1, 'Kuinka vanha Antti on?'),
-(2, 'Abc, abc, abc!');
 
 -- --------------------------------------------------------
 

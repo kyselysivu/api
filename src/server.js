@@ -1,3 +1,5 @@
+var path = require('path');
+var process = require('process');
 const express = require('express')
 const cookieParser = require('cookie-parser');
 var cors = require('cors');
@@ -13,6 +15,9 @@ app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true
 }))
+
+// Serve frontend
+app.use(express.static(path.join(__dirname, '../build')));
 
 // Cookie parsing middleware
 app.use(cookieParser());
@@ -37,6 +42,7 @@ app.use((req, res, next) => {
 // 'Authorization' middleware
 // This middleware checks if the request contains a 'team' cookie.
 // The cookie contains the team name.
+/*
 app.use((req, res, next) => {
     if (authException.find((element) => {
         if (req.url.includes(element)) {
@@ -55,6 +61,7 @@ app.use((req, res, next) => {
         })
     }
 })
+*/
 
 app.post('/api/start', async (req, res) => {
     const body = req.body
@@ -196,3 +203,7 @@ app.post('/')
 app.listen(port, () => {
     console.log(`[Startup] Kyselysivu API is running on port ${port}`)
 })
+
+app.get('/*', function(req,res) {
+    res.sendFile(path.join(process.cwd(), '/build/index.html'));
+});

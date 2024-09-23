@@ -26,6 +26,8 @@ app.use(cookieParser());
 // All POST requests to the api will contain a json body
 app.use(express.json())
 
+let allPoints = {"Juhabi" : 3000}
+
 // Logging middleware
 // For some debugging purposes
 app.use((req, res, next) => {
@@ -115,7 +117,31 @@ app.post('/api/answer', async (req, res) => {
             return
         }
 
-        console.log(results)
+        console.log("results: ",results)
+        
+        let points = 0
+
+        results.filter((answer) => {
+            return answer.is_correct === 1
+        }).map((answer) => {
+            if (body.answers.includes(answer.id)) {
+                console.log("correct: ", answer.id)
+                points += 100
+            }
+        })
+
+        results.filter((answer) => {
+            return answer.is_correct === 0
+        }).map((answer) => {
+            if (body.answers.includes(answer.id)) {
+                console.log("correct: ", answer.id)
+                points -= 100
+            }
+        })
+        
+        if (points > 0) {
+            allPoints["Juhabi"] += points
+        }
 
         res.json({
             correct: results.filter((answer) => {
@@ -129,7 +155,7 @@ app.post('/api/answer', async (req, res) => {
                 return answer.id
             }),
             time_bonus: 10,
-            total_points: 1000
+            total_points: allPoints["Juhabi"]
         })
     })
 })

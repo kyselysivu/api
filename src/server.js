@@ -121,7 +121,8 @@ app.post('/api/answer', async (req, res) => {
             }).map((answer) => {
                 return answer.id
             }),
-            time_bonus: 0
+            time_bonus: 10,
+            total_points: 1000
         })
     })
 })
@@ -181,6 +182,14 @@ app.get('/api/leaderboard', async (req, res) => {
         })
     })
 });
+
+app.post('/api/end', async (req, res) => {
+    // todo
+    res.json({
+        "score": 1000,
+        "time": 70
+    })
+})
 
 app.post('/')
 

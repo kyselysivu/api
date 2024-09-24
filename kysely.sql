@@ -1,14 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.0.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 23.09.2024 klo 09:47
--- Palvelimen versio: 10.4.6-MariaDB
--- PHP Version: 7.3.9
+-- Generation Time: 24.09.2024 klo 09:18
+-- Palvelimen versio: 10.4.27-MariaDB
+-- PHP Version: 8.1.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -33,7 +32,7 @@ CREATE TABLE `answers` (
   `related_question` int(11) NOT NULL,
   `answer_title` varchar(255) NOT NULL,
   `is_correct` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Vedos taulusta `answers`
@@ -86,7 +85,13 @@ INSERT INTO `answers` (`id`, `related_question`, `answer_title`, `is_correct`) V
 (64, 15, '(234 % 10) * 10', 0),
 (65, 15, '(234 * 10) % 10', 0),
 (66, 15, '(234 % 100) / 10', 1),
-(67, 15, '(234 % 10) / 10', 0);
+(67, 15, '(234 % 10) / 10', 0),
+(68, 13, 'Kokonaisluku', 0),
+(69, 13, 'Liukuluku', 0),
+(70, 13, 'Merkkijono', 1),
+(71, 13, 'Totuusarvo', 0),
+(72, 14, 'True', 0),
+(73, 14, 'False', 1);
 
 -- --------------------------------------------------------
 
@@ -99,7 +104,7 @@ CREATE TABLE `questions` (
   `question_title` text NOT NULL,
   `image_src` varchar(255) NOT NULL,
   `additional_html` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Vedos taulusta `questions`
@@ -116,8 +121,8 @@ INSERT INTO `questions` (`id`, `question_title`, `image_src`, `additional_html`)
 (10, 'Onko oheisessa kuvassa esitetty kytkentä diodin testaamiseksi oikein vai väärin?', '/diodi.png', ''),
 (11, 'Valitse sopivin juottimen käytönaikainen lämpötila', '', ''),
 (12, 'Tarkastele seuraavaa ohjelmakoodia: \r\nKuinka monta kertaa ohjelma toistaa tekstin \"Lasketaan yhdestä kymmeneen\"?', '', '<code>i = 0<br>while i < 10:<br>&nbsp&nbsp&nbsp&nbsp&nbsp&nbspprint(\"Lasketaan yhdestä kymmeneen\")<br>print(\"Valmis!\")</code>'),
-(13, 'Mitä tietotyyppiä kukin seuraavista arvoista edustaa?', '', ''),
-(14, 'Mikä totuusarvo tulee tulokseksi kustakin allaolevasta Boolen lausekkeesta?', '', ''),
+(13, 'Mitä tietotyyppiä seuraava arvo edustaa?', '', '<code>\"Tervehdys!\"</code>'),
+(14, 'Mikä totuusarvo tulee tulokseksi seuraavasta Boolean-lausekkeesta?', '', '<code>5 < 10 and not 20 > 10</code>'),
 (15, 'Moduloa (%) eli jakojäännöstä käyttäen voimme selvittää luvun viimeisen numeron, esim: 234 % 10 = 4. Millaisella laskutoimituksella saamme luvun toiseksi viimeisen numeron?', '', '');
 
 -- --------------------------------------------------------
@@ -130,8 +135,9 @@ CREATE TABLE `scores` (
   `id` int(11) NOT NULL,
   `group_name` varchar(60) NOT NULL,
   `score` int(11) NOT NULL,
+  `time` int(11) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Indexes for dumped tables
@@ -164,7 +170,7 @@ ALTER TABLE `scores`
 -- AUTO_INCREMENT for table `answers`
 --
 ALTER TABLE `answers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `questions`
@@ -176,7 +182,7 @@ ALTER TABLE `questions`
 -- AUTO_INCREMENT for table `scores`
 --
 ALTER TABLE `scores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Rajoitteet vedostauluille

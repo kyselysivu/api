@@ -27,6 +27,8 @@ app.use(cookieParser());
 app.use(express.json())
 
 let allPoints = {}
+let times = {}
+let groupNames = {}
 
 // Logging middleware
 // For some debugging purposes
@@ -76,12 +78,16 @@ app.post('/api/start', async (req, res) => {
         }
 
         // add a random digit identifier to the team name
-        res.cookie('team', body.team_name + Math.floor(Math.random() * 10000), {
+        const teamName = body.team_name + Math.floor(Math.random() * 10000)
+
+        res.cookie('team', teamName), {
             path: '/',
             sameSite: 'None',  // Allows cross-origin cookies
             secure: false,     // Should be true in production with HTTPS
             httpOnly: false    // Allows access from JavaScript
-        });
+        };
+        
+        times[teamName] = Date.now()
 
         res.json({
             "questions": results.map((question) => {
@@ -212,10 +218,23 @@ app.get('/api/leaderboard', async (req, res) => {
 });
 
 app.post('/api/end', async (req, res) => {
-    // todo
-    res.json({
-        "score": 1000,
-        "time": 70
+    console.log(allPoints)
+    console.log(req.cookies.team)
+    console.log(allPoints[req.cookies.team])
+    console.log(times[req.cookies.team])
+    console.log(Date.now() - times[req.cookies.team])
+    console.log(req.cookies)
+
+    connection.query('INSERT INTO scores (group_name, score, time) VALUES (?, ?, ?)', [req.cookies.team, allPoints[req.cookies.team], Date.now() - times[req.cookies.team]], (error, results) => {
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        res.json({
+            "score": allPoints[req.cookies.team],
+            "time": Date.now() - times[req.cookies.team]
+        })
     })
 })
 

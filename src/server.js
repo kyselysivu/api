@@ -173,12 +173,14 @@ app.post('/api/answer', async (req, res) => {
             console.log(`Points after correct/incorrect calculation: ${points}`);
 
             // Calculate time bonus if all answers are correct
+            /*
             let timeBonus = 0;
             if (allCorrect) {
                 const remainingTime = timePerQuestion - timeTaken;
                 timeBonus = points * (remainingTime / timePerQuestion);
                 points += timeBonus;
             }
+            */
 
             console.log(`Time bonus: ${timeBonus}`);
             console.log(`Total points after time bonus: ${points}`);

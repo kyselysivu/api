@@ -26,7 +26,7 @@ app.use(cookieParser());
 // All POST requests to the api will contain a json body
 app.use(express.json())
 
-let allPoints = {"Juhabi" : 3000}
+let allPoints = {}
 
 // Logging middleware
 // For some debugging purposes
@@ -117,7 +117,7 @@ app.post('/api/answer', async (req, res) => {
             return
         }
 
-        console.log("results: ",results)
+        //console.log("results: ",results)
         
         let points = 0
 
@@ -125,7 +125,7 @@ app.post('/api/answer', async (req, res) => {
             return answer.is_correct === 1
         }).map((answer) => {
             if (body.answers.includes(answer.id)) {
-                console.log("correct: ", answer.id)
+                //console.log("correct: ", answer.id)
                 points += 100
             }
         })
@@ -134,14 +134,20 @@ app.post('/api/answer', async (req, res) => {
             return answer.is_correct === 0
         }).map((answer) => {
             if (body.answers.includes(answer.id)) {
-                console.log("correct: ", answer.id)
+                //console.log("correct: ", answer.id)
                 points -= 100
             }
         })
         
-        if (points > 0) {
-            allPoints["Juhabi"] += points
+        if (allPoints[req.cookies.team] == null) {
+            allPoints[req.cookies.team] = 0
         }
+        
+        if (points > 0) {
+            allPoints[req.cookies.team] += points
+        }
+        
+                console.log("body: ", allPoints)
 
         res.json({
             correct: results.filter((answer) => {
@@ -155,7 +161,7 @@ app.post('/api/answer', async (req, res) => {
                 return answer.id
             }),
             time_bonus: 10,
-            total_points: allPoints["Juhabi"]
+            total_points: allPoints[req.cookies.team]
         })
     })
 })

@@ -79,7 +79,8 @@ app.post('/api/start', async (req, res) => {
 
         // add a random digit identifier to the team name
         const teamName = body.team_name + Math.floor(Math.random() * 10000)
-
+        groupNames[teamName] = body.team_name
+        
         res.cookie('team', teamName), {
             path: '/',
             sameSite: 'None',  // Allows cross-origin cookies
@@ -266,7 +267,7 @@ app.post('/api/end', async (req, res) => {
     console.log(Date.now() - times[req.cookies.team])
     console.log(req.cookies)
 
-    connection.query('INSERT INTO scores (group_name, score, time) VALUES (?, ?, ?)', [req.cookies.team, allPoints[req.cookies.team], Date.now() - times[req.cookies.team]], (error, results) => {
+    connection.query('INSERT INTO scores (group_name, score, time) VALUES (?, ?, ?)', [groupNames[req.cookies.team], allPoints[req.cookies.team], Date.now() - times[req.cookies.team]], (error, results) => {
         if (error) {
             console.error(error)
             return

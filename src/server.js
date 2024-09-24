@@ -93,78 +93,67 @@ app.post('/api/start', async (req, res) => {
 })
 
 app.post('/api/answer', async (req, res) => {
-    const body = req.body
+    const body = req.body;
 
     // Verify questionId
     if (isNaN(body.question_id)) {
         res.status(400).json({
             error: 'Invalid question ID'
-        })
-        return
+        });
+        return;
     }
 
     // Verify request contains array of answers
     if (!Array.isArray(body.answers)) {
         res.status(400).json({
             error: 'Invalid answer array'
-        })
-        return
+        });
+        return;
     }
 
     connection.query('SELECT * FROM answers WHERE related_question = ?', [body.question_id], (error, results) => {
         if (error) {
-            console.error(error)
-            return
+            console.error(error);
+            res.status(500).json({ error: 'Database query error' });
+            return;
         }
 
-        //console.log("results: ",results)
-        
-        let points = 0
+        const totalOptions = results.length;
+        const correctAnswers = results.filter(answer => answer.is_correct === 1);
+        const incorrectAnswers = results.filter(answer => answer.is_correct === 0);
+        const basePoints = 100;
+        const pointsPerCorrect = basePoints / correctAnswers.length;
+        const penaltyPerIncorrect = basePoints / totalOptions;
 
-        results.filter((answer) => {
-            return answer.is_correct === 1
-        }).map((answer) => {
-            if (body.answers.includes(answer.id)) {
-                //console.log("correct: ", answer.id)
-                points += 100
-            }
-        })
+        let points = 0;
 
-        results.filter((answer) => {
-            return answer.is_correct === 0
-        }).map((answer) => {
+        correctAnswers.forEach(answer => {
             if (body.answers.includes(answer.id)) {
-                //console.log("correct: ", answer.id)
-                points -= 100
+                points += pointsPerCorrect;
             }
-        })
-        
-        if (allPoints[req.cookies.team] == null) {
-            allPoints[req.cookies.team] = 0
+        });
+
+        incorrectAnswers.forEach(answer => {
+            if (body.answers.includes(answer.id)) {
+                points -= penaltyPerIncorrect;
+            }
+        });
+
+        if (!allPoints[req.cookies.team]) {
+            allPoints[req.cookies.team] = 0;
         }
-        
+
         if (points > 0) {
-            allPoints[req.cookies.team] += points
+            allPoints[req.cookies.team] += points;
         }
-        
-                console.log("body: ", allPoints)
 
         res.json({
-            correct: results.filter((answer) => {
-                return answer.is_correct === 1
-            }).map((answer) => {
-                return answer.id
-            }),
-            incorrect: results.filter((answer) => {
-                return answer.is_correct === 0
-            }).map((answer) => {
-                return answer.id
-            }),
-            time_bonus: 10,
+            correct: correctAnswers.map(answer => answer.id),
+            incorrect: incorrectAnswers.map(answer => answer.id),
             total_points: allPoints[req.cookies.team]
-        })
-    })
-})
+        });
+    });
+});
 app.get('/api/questions/:questionId', async (req, res) => {
     const questionId = req.params.questionId
 

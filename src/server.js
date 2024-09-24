@@ -182,8 +182,7 @@ app.post('/api/answer', async (req, res) => {
             }
             */
 
-            console.log(`Time bonus: ${timeBonus}`);
-            console.log(`Total points after time bonus: ${points}`);
+            console.log(`Total points: ${points}`);
 
             if (!allPoints[req.cookies.team]) {
                 allPoints[req.cookies.team] = 0;
@@ -198,7 +197,7 @@ app.post('/api/answer', async (req, res) => {
             res.json({
                 correct: correctAnswers.map(answer => answer.id),
                 incorrect: incorrectAnswers.map(answer => answer.id),
-                time_bonus: timeBonus,
+                time_bonus: 0,
                 total_points: allPoints[req.cookies.team]
             });
         });

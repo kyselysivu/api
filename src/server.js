@@ -100,6 +100,13 @@ app.post('/api/start', async (req, res) => {
 
 app.post('/api/answer', async (req, res) => {
     const body = req.body;
+    const startTime = req.body.start_time || Date.now(); // Use current time if start_time is not provided
+    const endTime = Date.now();
+    const timeTaken = (endTime - startTime) / 1000; // Time taken in seconds
+
+    console.log(`Start time: ${startTime}`);
+    console.log(`End time: ${endTime}`);
+    console.log(`Time taken: ${timeTaken}`);
 
     // Verify questionId
     if (isNaN(body.question_id)) {
@@ -117,46 +124,80 @@ app.post('/api/answer', async (req, res) => {
         return;
     }
 
-    connection.query('SELECT * FROM answers WHERE related_question = ?', [body.question_id], (error, results) => {
+    // Get the total number of questions
+    connection.query('SELECT COUNT(*) AS totalQuestions FROM questions', (error, questionResults) => {
         if (error) {
             console.error(error);
             res.status(500).json({ error: 'Database query error' });
             return;
         }
 
-        const totalOptions = results.length;
-        const correctAnswers = results.filter(answer => answer.is_correct === 1);
-        const incorrectAnswers = results.filter(answer => answer.is_correct === 0);
-        const basePoints = 100;
-        const pointsPerCorrect = basePoints / correctAnswers.length;
-        const penaltyPerIncorrect = basePoints / totalOptions;
+        const totalQuestions = questionResults[0].totalQuestions;
+        const totalQuizTime = 720; // Assuming total quiz time is 720 seconds (12 minutes)
+        const timePerQuestion = totalQuizTime / totalQuestions;
 
-        let points = 0;
+        console.log(`Total questions: ${totalQuestions}`);
+        console.log(`Time per question: ${timePerQuestion}`);
 
-        correctAnswers.forEach(answer => {
-            if (body.answers.includes(answer.id)) {
-                points += pointsPerCorrect;
+        connection.query('SELECT * FROM answers WHERE related_question = ?', [body.question_id], (error, results) => {
+            if (error) {
+                console.error(error);
+                res.status(500).json({ error: 'Database query error' });
+                return;
             }
-        });
 
-        incorrectAnswers.forEach(answer => {
-            if (body.answers.includes(answer.id)) {
-                points -= penaltyPerIncorrect;
+            const totalOptions = results.length;
+            const correctAnswers = results.filter(answer => answer.is_correct === 1);
+            const incorrectAnswers = results.filter(answer => answer.is_correct === 0);
+            const basePoints = 100;
+            const pointsPerCorrect = basePoints / correctAnswers.length;
+            const penaltyPerIncorrect = basePoints / totalOptions;
+
+            let points = 0;
+            let allCorrect = true;
+
+            correctAnswers.forEach(answer => {
+                if (body.answers.includes(answer.id)) {
+                    points += pointsPerCorrect;
+                }
+            });
+
+            incorrectAnswers.forEach(answer => {
+                if (body.answers.includes(answer.id)) {
+                    points -= penaltyPerIncorrect;
+                    allCorrect = false;
+                }
+            });
+
+            console.log(`Points after correct/incorrect calculation: ${points}`);
+
+            // Calculate time bonus if all answers are correct
+            let timeBonus = 0;
+            if (allCorrect) {
+                const remainingTime = timePerQuestion - timeTaken;
+                timeBonus = points * (remainingTime / timePerQuestion);
+                points += timeBonus;
             }
-        });
 
-        if (!allPoints[req.cookies.team]) {
-            allPoints[req.cookies.team] = 0;
-        }
+            console.log(`Time bonus: ${timeBonus}`);
+            console.log(`Total points after time bonus: ${points}`);
 
-        if (points > 0) {
-            allPoints[req.cookies.team] += points;
-        }
+            if (!allPoints[req.cookies.team]) {
+                allPoints[req.cookies.team] = 0;
+            }
 
-        res.json({
-            correct: correctAnswers.map(answer => answer.id),
-            incorrect: incorrectAnswers.map(answer => answer.id),
-            total_points: allPoints[req.cookies.team]
+            if (points > 0) {
+                allPoints[req.cookies.team] += points;
+            }
+
+            console.log(`Total points for team ${req.cookies.team}: ${allPoints[req.cookies.team]}`);
+
+            res.json({
+                correct: correctAnswers.map(answer => answer.id),
+                incorrect: incorrectAnswers.map(answer => answer.id),
+                time_bonus: timeBonus,
+                total_points: allPoints[req.cookies.team]
+            });
         });
     });
 });

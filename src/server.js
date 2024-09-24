@@ -100,10 +100,23 @@ app.post('/api/start', async (req, res) => {
 
 app.post('/api/answer', async (req, res) => {
     const body = req.body;
-    const startTime = req.body.start_time || Date.now(); // Use current time if start_time is not provided
-    const endTime = Date.now();
+
+    // Ensure both start_time and end_time are passed by the client
+    const startTime = req.body.start_time;
+    const endTime = req.body.end_time;
+
+    // If start_time or end_time is missing, return an error
+    if (!startTime || !endTime) {
+        res.status(400).json({
+            error: 'Start time or End time not provided'
+        });
+        return;
+    }
+
+    // Calculate the time taken using client-provided start_time and end_time
     const timeTaken = (endTime - startTime) / 1000; // Time taken in seconds
 
+    // Log the start and end times for debugging purposes
     console.log(`Start time: ${startTime}`);
     console.log(`End time: ${endTime}`);
     console.log(`Time taken: ${timeTaken}`);
@@ -156,12 +169,14 @@ app.post('/api/answer', async (req, res) => {
             let points = 0;
             let allCorrect = true;
 
+            // Award points for correct answers
             correctAnswers.forEach(answer => {
                 if (body.answers.includes(answer.id)) {
                     points += pointsPerCorrect;
                 }
             });
 
+            // Apply penalties for incorrect answers
             incorrectAnswers.forEach(answer => {
                 if (body.answers.includes(answer.id)) {
                     points -= penaltyPerIncorrect;
@@ -171,15 +186,19 @@ app.post('/api/answer', async (req, res) => {
 
             console.log(`Points after correct/incorrect calculation: ${points}`);
 
-            // Calculate time bonus if all answers are correct
+            // Ensure points don't go below zero
+            points = Math.max(points, 0);
+
+            // Calculate time bonus based on remaining time
             let timeBonus = 0;
             if (allCorrect) {
-                const remainingTime = timePerQuestion - timeTaken;
-                timeBonus = points * (remainingTime / timePerQuestion);
+                const remainingTime = Math.max(0, timePerQuestion - timeTaken); // Ensure remaining time is not negative
+                timeBonus = basePoints * (remainingTime / timePerQuestion); // Time bonus is based on base points, not calculated points
+                console.log(`Remaining time: ${remainingTime}`);
+                console.log(`Calculated time bonus: ${timeBonus}`);
                 points += timeBonus;
             }
 
-            console.log(`Time bonus: ${timeBonus}`);
             console.log(`Total points after time bonus: ${points}`);
 
             if (!allPoints[req.cookies.team]) {
@@ -201,6 +220,9 @@ app.post('/api/answer', async (req, res) => {
         });
     });
 });
+
+
+
 app.get('/api/questions/:questionId', async (req, res) => {
     const questionId = req.params.questionId
 

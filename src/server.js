@@ -94,7 +94,7 @@ app.post('/api/start', async (req, res) => {
     })
 })
 
-app.post('/api/answer', async (req, res) => {c
+app.post('/api/answer', async (req, res) => {
     const body = req.body;
     const user = body.user;
 

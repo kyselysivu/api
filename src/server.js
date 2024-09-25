@@ -80,34 +80,30 @@ app.post('/api/start', async (req, res) => {
         // add a random digit identifier to the team name
         const teamName = body.team_name + Math.floor(Math.random() * 10000)
         groupNames[teamName] = body.team_name
-        
-        res.cookie('team', teamName), {
-            path: '/',
-            sameSite: 'None',  // Allows cross-origin cookies
-            secure: false,     // Should be true in production with HTTPS
-            httpOnly: false    // Allows access from JavaScript
-        };
-        
+                
         times[teamName] = Date.now()
 
         res.json({
             "questions": results.map((question) => {
                 return question.id
             }),
+            "team_id": teamName,
+            "team_name": body.team_name,
             "time_limit": 60 * 12
         })
     })
 })
 
-app.post('/api/answer', async (req, res) => {
+app.post('/api/answer', async (req, res) => {c
     const body = req.body;
-    const startTime = req.body.start_time || Date.now(); // Use current time if start_time is not provided
-    const endTime = Date.now();
-    const timeTaken = (endTime - startTime) / 1000; // Time taken in seconds
+    const user = body.user;
 
-    console.log(`Start time: ${startTime}`);
-    console.log(`End time: ${endTime}`);
-    console.log(`Time taken: ${timeTaken}`);
+    if (user === undefined) {
+        res.status(400).json({
+            error: 'You did not provide a user! If you receive this request in a legitimate environment (restarted the page etc), the client should be forwarded to the start page.'
+        });
+        return;
+    }
 
     // Verify questionId
     if (isNaN(body.question_id)) {
@@ -184,21 +180,21 @@ app.post('/api/answer', async (req, res) => {
 
             console.log(`Total points: ${points}`);
 
-            if (!allPoints[req.cookies.team]) {
-                allPoints[req.cookies.team] = 0;
+            if (!allPoints[user]) {
+                allPoints[user] = 0;
             }
 
             if (points > 0) {
-                allPoints[req.cookies.team] += points;
+                allPoints[user] += points;
             }
 
-            console.log(`Total points for team ${req.cookies.team}: ${allPoints[req.cookies.team]}`);
+            console.log(`Total points for team ${user}: ${allPoints[user]}`);
 
             res.json({
                 correct: correctAnswers.map(answer => answer.id),
                 incorrect: incorrectAnswers.map(answer => answer.id),
                 time_bonus: 0,
-                total_points: allPoints[req.cookies.team]
+                total_points: allPoints[user]
             });
         });
     });
@@ -261,22 +257,24 @@ app.get('/api/leaderboard', async (req, res) => {
 });
 
 app.post('/api/end', async (req, res) => {
+    const body = req.body
+    const user = body.user
+
     console.log(allPoints)
-    console.log(req.cookies.team)
-    console.log(allPoints[req.cookies.team])
-    console.log(times[req.cookies.team])
-    console.log(Date.now() - times[req.cookies.team])
+    console.log(allPoints[user])
+    console.log(times[user])
+    console.log(Date.now() - times[user])
     console.log(req.cookies)
 
-    connection.query('INSERT INTO scores (group_name, score, time) VALUES (?, ?, ?)', [groupNames[req.cookies.team], allPoints[req.cookies.team], Date.now() - times[req.cookies.team]], (error, results) => {
+    connection.query('INSERT INTO scores (group_name, score, time) VALUES (?, ?, ?)', [groupNames[user], allPoints[user], Date.now() - times[user]], (error, results) => {
         if (error) {
             console.error(error)
             return
         }
 
         res.json({
-            "score": allPoints[req.cookies.team],
-            "time": Date.now() - times[req.cookies.team]
+            "score": allPoints[user],
+            "time": Date.now() - times[user]
         })
     })
 })

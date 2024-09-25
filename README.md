@@ -18,11 +18,14 @@ Run server
    {"team_name": "string"}
    ```
 
-   Response headers contain a Set-Cookie session token that the client must use in all subsequent requests.
+   Response headers contain a team ID that the client must use in all subsequent requests in the form of a json body
+   (only applies for POSTs.)
     ```json
     {
         "questions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "time_limit": 720
+        "time_limit": 720,
+        "team_name": "Juhani",
+        "team_id": "Juhani1234"
     }
     ```
 ### Getting a question

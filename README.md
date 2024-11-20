@@ -1,6 +1,6 @@
 # Kyselysivu Backend
 
-An API for [Kyselysivu](https://github.com/Finfeny/Kyselysivu-front)
+An API for [Kyselysivu](https://github.com/kyselysivu/frontend)
 
 ## Running
 Install dependencies
